@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GovCore — Inner Source for Government</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --navy:    #1E2761;
+        --mid:     #4A6FA5;
+        --ice:     #CADCFC;
+        --amber:   #F4A300;
+        --white:   #FFFFFF;
+        --bg:      #0d1117;
+        --card-bg: rgba(18, 24, 48, 0.97);
+        --problem: #7B2D8B;
+        --solution:#F4A300;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: 'IBM Plex Sans', sans-serif;
+        color: var(--white);
+        overflow-x: scroll;
+        overflow-y: hidden;
+        width: 10000px;
+        height: 1000px;
+        position: relative;
+        cursor: default;
+      }
+
+      html {
+        background: var(--bg);
+        min-height: 100vh;
+      }
+
+      /* ── Grid background ── */
+      .grid-bg {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 1;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(202,220,252,0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(202,220,252,0.04) 1px, transparent 1px);
+        background-size: 60px 60px;
+      }
+
+      /* ── Nodes (network dots) ── */
+      .network-nodes {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      /* ── Header ── */
+      .gov-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 50px;
+        background: rgba(13,17,23,0.85);
+        border-bottom: 2px solid var(--amber);
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        z-index: 100;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .ibm-mark {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 36px;
+        font-weight: 700;
+        color: #0062ff;
+        letter-spacing: -1px;
+      }
+
+      .gov-mark {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .gov-mark span:first-child {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--amber);
+        letter-spacing: 3px;
+      }
+
+      .gov-mark span:last-child {
+        font-size: 12px;
+        color: var(--ice);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .header-title {
+        text-align: center;
+      }
+
+      .header-title h1 {
+        font-size: 38px;
+        font-weight: 300;
+        letter-spacing: 1px;
+        color: var(--white);
+      }
+
+      .header-title h1 strong {
+        font-weight: 700;
+        color: var(--amber);
+      }
+
+      .header-title p {
+        font-size: 16px;
+        color: var(--ice);
+        margin-top: 6px;
+        font-style: italic;
+      }
+
+      .team-tag {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 13px;
+        color: var(--ice);
+        text-align: right;
+        line-height: 1.8;
+      }
+
+      /* ── Main container ── */
+      .main-container {
+        position: absolute;
+        top: 0; left: 0;
+        width: 10000px;
+        height: 100%;
+        z-index: 2;
+      }
+
+      /* ── Timeline ── */
+      .timeline-container {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 10000px;
+        height: 200px;
+        transform: translateY(-50%);
+        z-index: 10;
+      }
+
+      .timeline {
+        height: 4px;
+        background: linear-gradient(
+          to right,
+          transparent 0%,
+          var(--problem) 25%,
+          rgba(255,255,255,0.2) 48%,
+          rgba(255,255,255,0.2) 52%,
+          var(--amber) 75%,
+          transparent 100%
+        );
+        position: absolute;
+        top: 50%;
+        left: 200px;
+        right: 200px;
+        transform: translateY(-50%);
+      }
+
+      .timeline::before {
+        content: 'THE PROBLEM TODAY';
+        position: absolute;
+        left: 12%;
+        top: -75px;
+        color: var(--problem);
+        font-weight: 700;
+        font-size: 32px;
+        font-family: 'IBM Plex Mono', monospace;
+        letter-spacing: 2px;
+        opacity: 0.9;
+      }
+
+      .timeline::after {
+        content: 'GOVCORE SOLUTION';
+        position: absolute;
+        left: 53%;
+        top: -75px;
+        color: var(--amber);
+        font-weight: 700;
+        font-size: 32px;
+        font-family: 'IBM Plex Mono', monospace;
+        letter-spacing: 2px;
+        opacity: 0.9;
+      }
+
+      .divider {
+        position: absolute;
+        top: -96px;
+        left: 50%;
+        height: 200px;
+        width: 3px;
+        background: linear-gradient(to bottom, transparent, var(--white), transparent);
+        transform: translateX(-50%);
+        z-index: 11;
+        opacity: 0.4;
+      }
+
+      .divider-label {
+        position: absolute;
+        top: -120px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        color: rgba(255,255,255,0.4);
+        letter-spacing: 3px;
+        white-space: nowrap;
+        text-transform: uppercase;
+      }
+
+      /* ── Timeline Points ── */
+      .timeline-point {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 12;
+        transition: all 0.25s ease;
+        background: rgba(13,17,23,0.9);
+      }
+
+      .timeline-point:hover {
+        transform: translate(-50%, -50%) scale(1.25);
+      }
+
+      .timeline-point.problem-node {
+        border: 3px solid var(--problem);
+        box-shadow: 0 0 20px rgba(123,45,139,0.4);
+      }
+
+      .timeline-point.problem-node:hover {
+        box-shadow: 0 0 40px rgba(123,45,139,0.8);
+      }
+
+      .timeline-point.solution-node {
+        border: 3px solid var(--amber);
+        box-shadow: 0 0 20px rgba(244,163,0,0.4);
+      }
+
+      .timeline-point.solution-node:hover {
+        box-shadow: 0 0 40px rgba(244,163,0,0.8);
+      }
+
+      .point-icon { font-size: 30px; }
+
+      /* Point positions */
+      .point-dup       { left: 900px; }
+      .point-incon     { left: 2000px; }
+      .point-silo      { left: 3200px; }
+      .point-cost      { left: 4400px; }
+      .point-arch      { left: 5500px; }
+      .point-wow       { left: 6700px; }
+      .point-gov       { left: 7900px; }
+      .point-interop   { left: 9100px; }
+
+      /* ── Data packet animation ── */
+      .data-packet {
+        position: absolute;
+        top: 50%;
+        width: 48px;
+        height: 28px;
+        transform: translateY(-65px);
+        z-index: 15;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+      }
+
+      .data-packet.active { opacity: 1; }
+
+      .packet-trail {
+        position: absolute;
+        top: 50%;
+        width: 80px;
+        height: 4px;
+        transform: translateY(-53px);
+        z-index: 14;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+        background: linear-gradient(to left, var(--amber), transparent);
+        border-radius: 2px;
+      }
+
+      .packet-trail.active { opacity: 1; }
+
+      @keyframes packetPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+      }
+
+      /* ── Cards ── */
+      .card-container {
+        position: absolute;
+        top: 0; left: 0;
+        width: 10000px;
+        height: 1000px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+        z-index: 20;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(4px);
+      }
+
+      .card-container.visible {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .card {
+        width: 2600px;
+        height: 820px;
+        background: var(--card-bg);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+        transform: translateY(80px);
+        opacity: 0;
+        transition: transform 0.4s ease, opacity 0.4s ease;
+        border-top: 3px solid var(--amber);
+      }
+
+      .card-container.visible .card {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .card-header {
+        padding: 28px 40px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid rgba(202,220,252,0.12);
+        height: 110px;
+        background: rgba(30,39,97,0.5);
+      }
+
+      .card-title { flex-grow: 1; }
+
+      .card-title h2 {
+        font-size: 42px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: var(--white);
+      }
+
+      .system-badge {
+        padding: 5px 16px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: 'IBM Plex Mono', monospace;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 8px;
+        display: inline-block;
+      }
+
+      .system-badge.problem-badge {
+        background: rgba(123,45,139,0.25);
+        border: 1px solid var(--problem);
+        color: #d48de0;
+      }
+
+      .system-badge.solution-badge {
+        background: rgba(244,163,0,0.15);
+        border: 1px solid var(--amber);
+        color: var(--amber);
+      }
+
+      .close-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 28px;
+        color: var(--ice);
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+
+      .close-btn:hover { background: rgba(255,255,255,0.14); }
+
+      .card-content {
+        flex-grow: 1;
+        display: flex;
+        gap: 0;
+        overflow: hidden;
+        height: calc(100% - 110px);
+      }
+
+      .card-left {
+        width: 55%;
+        padding: 36px 40px;
+        border-right: 1px solid rgba(202,220,252,0.1);
+        overflow-y: auto;
+      }
+
+      .card-right {
+        width: 45%;
+        padding: 36px 40px;
+        overflow-y: auto;
+        background: rgba(30,39,97,0.15);
+      }
+
+      .section-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--amber);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(244,163,0,0.3);
+      }
+
+      .card-desc {
+        font-size: 20px;
+        line-height: 1.65;
+        color: rgba(255,255,255,0.8);
+        margin-bottom: 28px;
+      }
+
+      .comparison {
+        display: flex;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(202,220,252,0.12);
+        margin-bottom: 28px;
+      }
+
+      .cmp-side {
+        flex: 1;
+        padding: 22px;
+      }
+
+      .cmp-side.before {
+        background: rgba(123,45,139,0.12);
+        border-right: 1px solid rgba(202,220,252,0.1);
+      }
+
+      .cmp-side.after {
+        background: rgba(244,163,0,0.08);
+      }
+
+      .cmp-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        font-weight: 700;
+      }
+
+      .cmp-side.before .cmp-label { color: #d48de0; }
+      .cmp-side.after  .cmp-label { color: var(--amber); }
+
+      .cmp-text {
+        font-size: 19px;
+        line-height: 1.6;
+        color: rgba(255,255,255,0.75);
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 28px;
+      }
+
+      .tag {
+        padding: 7px 16px;
+        border-radius: 4px;
+        font-size: 16px;
+        font-family: 'IBM Plex Mono', monospace;
+        background: rgba(202,220,252,0.07);
+        border: 1px solid rgba(202,220,252,0.18);
+        color: var(--ice);
+      }
+
+      .metrics {
+        display: flex;
+        gap: 16px;
+      }
+
+      .metric {
+        flex: 1;
+        background: rgba(30,39,97,0.5);
+        border: 1px solid rgba(202,220,252,0.12);
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .metric-value {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 30px;
+        font-weight: 700;
+        color: var(--amber);
+        margin-bottom: 8px;
+      }
+
+      .metric-label {
+        font-size: 16px;
+        color: rgba(255,255,255,0.5);
+        line-height: 1.3;
+      }
+
+      .story-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--ice);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0.7;
+      }
+
+      .story-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(202,220,252,0.15);
+      }
+
+      .user-story {
+        font-size: 19px;
+        line-height: 1.75;
+        color: rgba(255,255,255,0.78);
+        background: rgba(30,39,97,0.3);
+        border-left: 3px solid var(--amber);
+        padding: 24px 28px;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 28px;
+      }
+
+      .key-points { list-style: none; }
+
+      .key-points li {
+        font-size: 19px;
+        line-height: 1.6;
+        color: rgba(255,255,255,0.78);
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(202,220,252,0.08);
+        padding-left: 20px;
+        position: relative;
+      }
+
+      .key-points li::before {
+        content: '→';
+        position: absolute;
+        left: 0;
+        color: var(--amber);
+      }
+
+      /* ── Scroll hint ── */
+      .scroll-hint {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: rgba(255,255,255,0.3);
+        z-index: 50;
+        text-transform: uppercase;
+        animation: hintPulse 2s infinite;
+      }
+
+      @keyframes hintPulse {
+        0%,100% { opacity: 0.3; }
+        50% { opacity: 0.7; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Background grid -->
+    <div class="grid-bg"></div>
+
+    <!-- Data packet (replaces ambulance) -->
+    <div class="packet-trail" id="packet-trail"></div>
+    <div class="data-packet" id="data-packet">
+      <svg viewBox="0 0 48 28" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="46" height="26" rx="4" fill="#1E2761" stroke="#F4A300" stroke-width="2"/>
+        <rect x="7"  y="7"  width="8" height="4" rx="1" fill="#F4A300" opacity="0.9"/>
+        <rect x="7"  y="14" width="14" height="3" rx="1" fill="#CADCFC" opacity="0.6"/>
+        <rect x="7"  y="19" width="10" height="3" rx="1" fill="#CADCFC" opacity="0.4"/>
+        <rect x="30" y="7"  width="12" height="14" rx="2" fill="none" stroke="#F4A300" stroke-width="1.5" opacity="0.7"/>
+        <line x1="33" y1="11" x2="39" y2="11" stroke="#F4A300" stroke-width="1" opacity="0.7"/>
+        <line x1="33" y1="14" x2="39" y2="14" stroke="#F4A300" stroke-width="1" opacity="0.7"/>
+        <line x1="33" y1="17" x2="37" y2="17" stroke="#F4A300" stroke-width="1" opacity="0.7"/>
+      </svg>
+    </div>
+
+    <!-- Header -->
+    <header class="gov-header">
+      <div class="brand">
+        <div class="ibm-mark">IBM</div>
+        <div class="gov-mark">
+          <span>GOVCORE</span>
+          <span>Inner Source Framework</span>
+        </div>
+      </div>
+
+      <div class="header-title">
+        <h1>From <strong>Silos</strong> to <strong>Shared Infrastructure</strong></h1>
+        <p>Click any node to explore the problem — and how GovCore solves it</p>
+      </div>
+
+      <div class="team-tag">
+        IBM Apprentice Hackathon 2026<br/>
+        Saad · Hamza · Mehtab · Alex · Rishi
+      </div>
+    </header>
+
+    <!-- Main -->
+    <div class="main-container">
+      <div class="timeline-container">
+        <div class="timeline">
+          <div class="divider">
+            <div class="divider-label">Current → GovCore</div>
+          </div>
+
+          <!-- Problem nodes -->
+          <div class="timeline-point problem-node point-dup"    data-id="dup">    <div class="point-icon">🔁</div></div>
+          <div class="timeline-point problem-node point-incon"  data-id="incon">  <div class="point-icon">⚡</div></div>
+          <div class="timeline-point problem-node point-silo"   data-id="silo">   <div class="point-icon">🧱</div></div>
+          <div class="timeline-point problem-node point-cost"   data-id="cost">   <div class="point-icon">💸</div></div>
+
+          <!-- Solution nodes -->
+          <div class="timeline-point solution-node point-arch"    data-id="arch">   <div class="point-icon">🛰️</div></div>
+          <div class="timeline-point solution-node point-wow"     data-id="wow">    <div class="point-icon">🤝</div></div>
+          <div class="timeline-point solution-node point-gov"     data-id="gov">    <div class="point-icon">🔐</div></div>
+          <div class="timeline-point solution-node point-interop" data-id="interop"><div class="point-icon">🔗</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-hint">← scroll to explore →</div>
+
+    <!-- ── CARDS ── -->
+
+    <!-- 1. Duplication -->
+    <div class="card-container" id="dup-card">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>The Duplication Problem</h2>
+            <div class="system-badge problem-badge">Problem Today</div>
+          </div>
+          <div class="close-btn">×</div>
+        </div>
+        <div class="card-content">
+          <div class="card-left">
+            <div class="section-label">What's happening</div>
+            <p class="card-desc">Government departments each build their own versions of identical digital components — NI validators, address lookups, identity checks — with no awareness that the others exist.</p>
+            <div class="comparison">
+              <div class="cmp-side before">
+                <div class="cmp-label">Today</div>
+                <div class="cmp-text">HMRC, DWP, DVLA and others each maintain their own copy of near-identical logic. Three NI validators. Four address lookups. All drifting apart independently.</div>
+              </div>
+              <div class="cmp-side after">
+                <div class="cmp-label">GovCore</div>
+                <div class="cmp-text">One verified NI validator. One address lookup. Published once, consumed everywhere. No copies, no drift.</div>
+              </div>
+            </div>
+            <div class="tags">
+              <div class="tag">Wasted Budget</div>
+              <div class="tag">Parallel Build</div>
+              <div class="tag">No Shared Standard</div>
+            </div>
+            <div class="metrics">
+              <div class="metric"><div class="metric-value">3–5×</div><div class="metric-label">The same component rebuilt</div></div>
+              <div class="metric"><div class="metric-value">Weeks</div><div class="metric-label">Lost per team per component</div></div>
+              <div class="metric"><div class="metric-value">£bn</div><div class="metric-label">Annual government IT spend</div></div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="story-label">Why this matters</div>
+            <div class="user-story">A developer at HMRC spends three weeks building an NI number validator. That same month, a developer at DWP builds the same thing. Neither knows the other exists. Both will need to be maintained, patched, and updated separately — forever. This isn't a one-off. It's the default pattern across government digital delivery.</div>
+            <ul class="key-points">
+              <li>Duplicated effort is duplicated cost at scale</li>
+              <li>Each copy diverges from the others over time</li>
+              <li>When a security patch is needed, it must be applied to every copy separately</li>
+              <li>No single place to find what already exists</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Inconsistency -->
+    <div class="card-container" id="incon-card">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Inconsistency Across Services</h2>
+            <div class="system-badge problem-badge">Problem Today</div>
+          </div>
+          <div class="close-btn">×</div>
+        </div>
+        <div class="card-content">
+          <div class="card-left">
+            <div class="section-label">What's happening</div>
+            <p class="card-desc">Because each department builds independently, the same underlying data is handled differently depending on which service a citizen uses. Validation rules diverge. Edge cases are handled differently. Outputs don't match.</p>
+            <div class="comparison">
+              <div class="cmp-side before">
+                <div class="cmp-label">Today</div>
+                <div class="cmp-text">A citizen's address validates successfully in a DWP service but fails in the HMRC equivalent. Different rules, different implementations, different outcomes.</div>
+              </div>
+              <div class="cmp-side after">
+                <div class="cmp-label">GovCore</div>
+                <div class="cmp-text">One shared address component with one set of rules. Same validation logic, same output, regardless of which department's service the citizen uses.</div>
+              </div>
+            </div>
+            <div class="tags">
+              <div class="tag">Citizen Confusion</div>
+              <div class="tag">Diverging Rules</div>
+              <div class="tag">Downstream Errors</div>
+            </div>
+            <div class="metrics">
+              <div class="metric"><div class="metric-value">Silent</div><div class="metric-label">Inconsistencies rarely flagged</div></div>
+              <div class="metric"><div class="metric-value">Real</div><div class="metric-label">Impact on citizens' outcomes</div></div>
+              <div class="metric"><div class="metric-value">Growing</div><div class="metric-label">Divergence compounds over time</div></div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="story-label">Why this matters</div>
+            <div class="user-story">A citizen submits their address through a Universal Credit claim. The same address is rejected when they later use an HMRC service — because each department implemented slightly different validation rules years ago, and both have evolved independently since. The citizen doesn't know why it's failing. The support agent doesn't know either. The root cause is two implementations that should have been one.</div>
+            <ul class="key-points">
+              <li>Inconsistency in shared data erodes public trust</li>
+              <li>Support costs rise when citizens get different results from different services</li>
+              <li>Errors caused by inconsistency are the hardest to trace</li>
+              <li>GovCore's shared components make consistency a structural guarantee, not a hope</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Siloed Teams -->
+    <div class="card-container" id="silo-card">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Siloed Ownership</h2>
+            <div class="system-badge problem-badge">Problem Today</div>
+          </div>
+          <div class="close-btn">×</div>
+        </div>
+        <div class="card-content">
+          <div class="card-left">
+            <div class="section-label">The structural root cause</div>
+            <p class="card-desc">Departments are funded, measured, and held accountable independently. There is no incentive to share work with another department — and no process that says "check before you build." Silos aren't accidental. They're the rational outcome of how government is structured.</p>
+            <div class="comparison">
+              <div class="cmp-side before">
+                <div class="cmp-label">Today</div>
+                <div class="cmp-text">No reward for contributing to another department's codebase. No process requiring teams to check what already exists. Building your own is the path of least resistance.</div>
+              </div>
+              <div class="cmp-side after">
+                <div class="cmp-label">GovCore</div>
+                <div class="cmp-text">Reuse by default — all new services must check GovCore before building a shared component. Justification required to opt out, built into existing spend approval.</div>
+              </div>
+            </div>
+            <div class="tags">
+              <div class="tag">No Shared Incentive</div>
+              <div class="tag">No Reuse Mandate</div>
+              <div class="tag">Default to Build</div>
+            </div>
+            <div class="metrics">
+              <div class="metric"><div class="metric-value">Zero</div><div class="metric-label">Career reward for cross-dept contribution</div></div>
+              <div class="metric"><div class="metric-value">None</div><div class="metric-label">Process requiring "check first"</div></div>
+              <div class="metric"><div class="metric-value">Policy</div><div class="metric-label">Is the missing layer — not just tech</div></div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="story-label">The real problem</div>
+            <div class="user-story">A tech lead at HMRC needs an address lookup component. They know DWP might have one, but checking takes time they don't have. There's no central place to look. No guarantee DWP's version is maintained or documented. No process saying they should look. And even if they found it — contributing back improvements has no career upside. So they build their own. This is the rational decision given current incentives. GovCore changes the incentive structure, not just the tooling.</div>
+            <ul class="key-points">
+              <li>Technical solutions alone won't fix a structural incentive problem</li>
+              <li>GovCore's policy mandate makes reuse the default, not the exception</li>
+              <li>Opt-out with justification creates friction — not a wall, but not zero cost</li>
+              <li>This mirrors how GOV.UK Design System changed frontend behaviour across government</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Cost -->
+    <div class="card-container" id="cost-card">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>The Cost of Fragmentation</h2>
+            <div class="system-badge problem-badge">Problem Today</div>
+          </div>
+          <div class="close-btn">×</div>
+        </div>
+        <div class="card-content">
+          <div class="card-left">
+            <div class="section-label">Why this is expensive</div>
+            <p class="card-desc">Duplication isn't just a technical inefficiency — it has a direct financial cost. Every duplicated component requires its own build, test, maintenance, security patching, and on-call support. That cost compounds at scale across dozens of departments and hundreds of services.</p>
+            <div class="comparison">
+              <div class="cmp-side before">
+                <div class="cmp-label">Today</div>
+                <div class="cmp-text">Each department funds, builds, and maintains the same components independently. Security patches, updates, and improvements are paid for multiple times over.</div>
+              </div>
+              <div class="cmp-side after">
+                <div class="cmp-label">GovCore</div>
+                <div class="cmp-text">One funded platform team. One build. One security review. Cost is shared across all consuming departments. Investment in improvement benefits everyone simultaneously.</div>
+              </div>
+            </div>
+            <div class="tags">
+              <div class="tag">Duplicated Maintenance</div>
+              <div class="tag">Parallel Security Patches</div>
+              <div class="tag">No Economy of Scale</div>
+            </div>
+            <div class="metrics">
+              <div class="metric"><div class="metric-value">£bn</div><div class="metric-label">Annual UK gov digital spend</div></div>
+              <div class="metric"><div class="metric-value">N×</div><div class="metric-label">Cost multiplier from duplication</div></div>
+              <div class="metric"><div class="metric-value">3–5</div><div class="metric-label">Engineers needed to run GovCore</div></div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="story-label">The honest trade-off</div>
+            <div class="user-story">GovCore requires a dedicated, funded platform team — realistically three to five engineers in year one, growing with adoption. That is a real cost. But it replaces a much larger hidden cost: every department separately funding the same work. The GOV.UK Design System showed this model works. Dozens of departments now use shared frontend components instead of building their own — saving far more than the cost of the central team that maintains them.</div>
+            <ul class="key-points">
+              <li>GovCore's cost is visible and one-off; today's cost is hidden and recurring</li>
+              <li>Security patching a shared component once vs. patching N copies separately</li>
+              <li>Even partial reuse across major departments generates significant savings</li>
+              <li>GOV.UK Design System is the closest real-world precedent in UK government</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Satellite Architecture -->
+    <div class="card-container" id="arch-card">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>The Satellite Architecture</h2>
+            <div class="system-badge solution-badge">GovCore Solution</div>
+          </div>
+          <div class="close-btn">×</div>
+        </div>
+        <div class="card-content">
+          <div class="card-left">
+            <div class="section-label">How the technical model works</div>
+            <p class="card-desc">One central GovCore repository holds verified, versioned shared components. Departments keep full ownership of their own satellite repos. They consume GovCore components as dependencies — not copies. Semantic versioning means teams upgrade on their own schedule.</p>
+            <div class="comparison">
+              <div class="cmp-side before">
+                <div class="cmp-label">Without GovCore</div>
+                <div class="cmp-text">Each department forks or reimplements shared logic. Copies diverge. Breaking changes propagate unpredictably. No single source of truth.</div>
+              </div>
+              <div class="cmp-side after">
+                <div class="cmp-label">With GovCore</div>
+                <div class="cmp-text">GovCore is the dependency. Satellites reference it, never copy it. Semantic versioning gives teams control over when they take new versions. One PR to fix a bug fixes it for everyone.</div>
+              </div>
+            </div>
+            <div class="tags">
+              <div class="tag">OpenAPI Specs</div>
+              <div class="tag">Semantic Versioning</div>
+              <div class="tag">Language-Agnostic APIs</div>
+              <div class="tag">Dependency Not Copy</div>
+            </div>
+            <div class="metrics">
+              <div class="metric"><div class="metric-value">3 Rules</div><div class="metric-label">Consume · Don't Fork · 2 Reviewers</div></div>
+              <div class="metric"><div class="metric-value">All</div><div class="metric-label">Dept stacks supported via API</div></div>
+              <div class="metric"><div class="metric-value">1 Fix</div><div class="metric-label">Patches every consumer at once</div></div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="story-label">The three core rules</div>
+            <div class="user-story">Rule 1: Satellites consume GovCore — they never copy code into their own repo. The moment you copy it, you recreate the divergence problem. Rule 2: Semantic versioning means departments choose when to upgrade. Nobody is forced to take a breaking change immediately. Rule 3: All pull requests to the GovCore core require two approving reviewers from different departments — preventing any single team from controlling the shared platform.</div>
+            <ul class="key-points">
+              <li>OpenAPI spec required on every component — machine-readable contract</li>
+              <li>RESTful interfaces mean any language, any stack can consume GovCore</li>
+              <li>Mirrors how Android works: Google core, manufacturer satellites, no forking</li>
+              <li>Also mirrors GOV.UK Design System — already proven in UK government</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Ways of Working -->
+    <div class="card-container" id="wow-card">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Inner Source Ways of Working</h2>
+            <div class="system-badge solution-badge">GovCore Solution</div>
+          </div>
+          <div class="close-btn">×</div>
+        </div>
+        <div class="card-content">
+          <div class="card-left">
+            <div class="section-label">How teams collaborate — including across geographies</div>
+            <p class="card-desc">GovCore applies open-source collaboration principles inside government. Everything is async-first and written down — designed to work across HMRC in Worthing, DWP in Newcastle, DVLA in Swansea, and every other distributed team, with no requirement to be in the same room.</p>
+            <div class="comparison">
+              <div class="cmp-side before">
+                <div class="cmp-label">Without GovCore</div>
+                <div class="cmp-text">Cross-department collaboration requires meetings, informal relationships, and luck. Decisions live in someone's inbox. Geography is a real barrier.</div>
+              </div>
+              <div class="cmp-side after">
+                <div class="cmp-label">With GovCore</div>
+                <div class="cmp-text">Pull requests, RFCs, and guild decisions are all written, async, and visible. A maintainer in Edinburgh and a contributor in Bristol collaborate without a call.</div>
+              </div>
+            </div>
+            <div class="tags">
+              <div class="tag">Pull Requests</div>
+              <div class="tag">RFC Process</div>
+              <div class="tag">Component Guilds</div>
+              <div class="tag">Async-First</div>
+              <div class="tag">Transparent by Default</div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="story-label">The four mechanisms</div>
+            <ul class="key-points">
+              <li><strong>Pull Requests:</strong> Any developer from any department can propose a change. Written description, async review, full audit trail. No meeting required.</li>
+              <li><strong>RFC Process (Request for Comments):</strong> Before any major change, a short written proposal is shared for comment. Think planning permission before construction — a record of the decision, not a committee.</li>
+              <li><strong>Component Guilds:</strong> Each shared component has a small group of named maintainers drawn from its heaviest users. Named accountability — not "everyone's responsibility."</li>
+              <li><strong>Transparent by Default:</strong> All code, all review comments, all RFC decisions are visible to every participating department. This is what makes cross-geography collaboration work at scale.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Governance & Access -->
+    <div class="card-container" id="gov-card">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Governance & Access Control</h2>
+            <div class="system-badge solution-badge">GovCore Solution</div>
+          </div>
+          <div class="close-btn">×</div>
+        </div>
+        <div class="card-content">
+          <div class="card-left">
+            <div class="section-label">Light but accountable governance</div>
+            <p class="card-desc">The biggest risk with any shared platform is governance becoming a bottleneck. GovCore uses four mechanisms to keep governance light but real — including an explicit three-tier access model that directly answers how permissions are managed across departments.</p>
+            <div class="comparison">
+              <div class="cmp-side before">
+                <div class="cmp-label">Common failure mode</div>
+                <div class="cmp-text">Shared platforms with no clear ownership become "everyone's responsibility" — which means nobody's. Changes take months. Trust collapses. Adoption stalls.</div>
+              </div>
+              <div class="cmp-side after">
+                <div class="cmp-label">GovCore</div>
+                <div class="cmp-text">Named owners. SLA-backed reviews. Three-tier access. Automated quality gates. Governance that's accountable without being bureaucratic.</div>
+              </div>
+            </div>
+            <div class="tags">
+              <div class="tag">5-Day Review SLA</div>
+              <div class="tag">3-Tier Access</div>
+              <div class="tag">Auto Quality Gates</div>
+              <div class="tag">Opt-Out With Justification</div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="story-label">The access model — explicitly</div>
+            <div class="user-story">READ access is open to all government departments by default. Any team can view and consume GovCore components without approval. WRITE access — proposing changes — requires guild membership, granted per-component by existing guild members. ADMIN access — merging to main, approving releases — is limited to two named maintainers per component, reviewed annually.</div>
+            <ul class="key-points">
+              <li><strong>Review SLA:</strong> Maintainers commit to reviewing PRs within 5 working days — with named escalation if missed. Only works if the team is properly staffed.</li>
+              <li><strong>Automated gates:</strong> Unit tests, SAST security scanning, and accessibility checks run on every PR before a human sees it.</li>
+              <li><strong>Opt-out:</strong> Teams can always build their own — but document the justification within existing spend approval. Friction, not a wall.</li>
+              <li><strong>Honest caveat:</strong> This requires senior sponsorship and a funded team. Without those, the SLA breaks and adoption fails.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Interoperability -->
+    <div class="card-container" id="interop-card">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Interoperability by Design</h2>
+            <div class="system-badge solution-badge">GovCore Solution</div>
+          </div>
+          <div class="close-btn">×</div>
+        </div>
+        <div class="card-content">
+          <div class="card-left">
+            <div class="section-label">How systems actually work together</div>
+            <p class="card-desc">Interoperability isn't achieved by hoping departments use compatible technologies. It's achieved by standardising the interface at source. GovCore's mandatory OpenAPI specifications mean every shared component publishes a machine-readable contract — so any department's service can consume it, regardless of their tech stack.</p>
+            <div class="comparison">
+              <div class="cmp-side before">
+                <div class="cmp-label">Without GovCore</div>
+                <div class="cmp-text">Departments build bespoke translation layers to make their systems talk to each other. Integration projects take months. Every new connection is a new project.</div>
+              </div>
+              <div class="cmp-side after">
+                <div class="cmp-label">With GovCore</div>
+                <div class="cmp-text">Shared OpenAPI contracts mean the interface is standardised at source. Any department can integrate with any GovCore component — no bespoke translation layer needed.</div>
+              </div>
+            </div>
+            <div class="tags">
+              <div class="tag">OpenAPI Contracts</div>
+              <div class="tag">No Translation Layers</div>
+              <div class="tag">Language-Agnostic</div>
+              <div class="tag">Consistent Outputs</div>
+            </div>
+            <div class="metrics">
+              <div class="metric"><div class="metric-value">1</div><div class="metric-label">Interface contract per component</div></div>
+              <div class="metric"><div class="metric-value">Any</div><div class="metric-label">Tech stack can consume it</div></div>
+              <div class="metric"><div class="metric-value">Zero</div><div class="metric-label">Bespoke translation layers</div></div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="story-label">Why OpenAPI is the key</div>
+            <div class="user-story">Without a shared interface standard, interoperability is always a project — two teams negotiating a custom integration. With GovCore's OpenAPI requirement, every shared component is self-documenting and self-describing from day one. HMRC's Java service and DWP's Python service can both consume the same NI validation component without either team needing to know how the other is built. The contract is the interface — and the contract is enforced at the point of contribution.</div>
+            <ul class="key-points">
+              <li>OpenAPI spec is a condition of merging to GovCore — not optional documentation</li>
+              <li>Machine-readable contracts enable auto-generated client libraries in any language</li>
+              <li>Consistent outputs across all consumers — same input always produces same result</li>
+              <li>This is how GOV.UK Pay and GOV.UK Notify already work — GovCore extends the model</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const pointPositions = {
+        dup: 900, incon: 2000, silo: 3200, cost: 4400,
+        arch: 5500, wow: 6700, gov: 7900, interop: 9100
+      };
+
+      let lastId = null;
+      const packet  = document.getElementById('data-packet');
+      const trail   = document.getElementById('packet-trail');
+
+      function hideAll() {
+        document.querySelectorAll('.card-container').forEach(c => c.classList.remove('visible'));
+      }
+
+      function animatePacket(fromX, toX) {
+        const goRight = toX > fromX;
+        const dist    = Math.abs(toX - fromX);
+        const dur     = Math.min(Math.max(dist / 600, 1.5), 8);
+
+        packet.style.transition = 'none';
+        trail.style.transition  = 'none';
+        packet.style.left = fromX + 'px';
+        trail.style.left  = (goRight ? fromX - 80 : fromX) + 'px';
+        packet.style.transform = goRight ? 'translateY(-65px)' : 'translateY(-65px) scaleX(-1)';
+        trail.style.background = goRight
+          ? 'linear-gradient(to left, #F4A300, transparent)'
+          : 'linear-gradient(to right, #F4A300, transparent)';
+
+        packet.classList.add('active');
+        trail.classList.add('active');
+
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          packet.style.transition = `left ${dur}s ease`;
+          trail.style.transition  = `left ${dur}s ease`;
+          packet.style.left = toX + 'px';
+          trail.style.left  = (goRight ? toX - 80 : toX) + 'px';
+
+          setTimeout(() => {
+            packet.classList.remove('active');
+            trail.classList.remove('active');
+          }, dur * 1000);
+        }));
+      }
+
+      document.querySelectorAll('.timeline-point').forEach(pt => {
+        pt.addEventListener('click', function() {
+          const id = this.dataset.id;
+
+          if (lastId && lastId !== id) {
+            animatePacket(pointPositions[lastId], pointPositions[id]);
+          }
+          lastId = id;
+
+          setTimeout(() => {
+            hideAll();
+            const container = document.getElementById(id + '-card');
+            if (!container) return;
+
+            const card      = container.querySelector('.card');
+            const pos       = pointPositions[id];
+            const cardW     = 2600;
+            let left        = pos - cardW / 2;
+            left = Math.max(200, Math.min(7200, left));
+            card.style.left = left + 'px';
+            card.style.top  = '110px';
+            container.classList.add('visible');
+          }, lastId === id ? 0 : 1800);
+        });
+      });
+
+      document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          btn.closest('.card-container').classList.remove('visible');
+        });
+      });
+
+      document.querySelectorAll('.card-container').forEach(c => {
+        c.addEventListener('click', e => { if (e.target === c) hideAll(); });
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') hideAll();
+        if (e.key === 'ArrowLeft')  window.scrollBy({ left: -500, behavior: 'smooth' });
+        if (e.key === 'ArrowRight') window.scrollBy({ left:  500, behavior: 'smooth' });
+      });
+    </script>
+  </body>
+</html>
